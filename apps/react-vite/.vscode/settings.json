@@ -2,5 +2,10 @@
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
-  }
+  },
+  "builder.serverUrl": "",
+  "builder.command": "npm run dev",
+  "builder.runDevServer": true,
+  "builder.autoDetectDevServer": true,
+  "builder.launchType": "editor"
 }
