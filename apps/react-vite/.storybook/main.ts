@@ -1,4 +1,6 @@
-module.exports = {
+import type { StorybookConfig } from '@storybook/react-vite';
+
+const config: StorybookConfig = {
   stories: ['../src/**/*.stories.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx)'],
 
   addons: [
@@ -6,7 +8,15 @@ module.exports = {
     'storybook/internal/node-logger',
     '@storybook/addon-docs',
     '@storybook/addon-a11y',
-    '@storybook/addon-mcp'
+    {
+      name: '@storybook/addon-mcp',
+      options: {
+        toolsets: {
+          dev: true, // Tools for story URL retrieval and UI building instructions (default: true)
+          docs: true, // Tools for component manifest and documentation (default: true)
+        },
+      },
+    },
   ],
 
   framework: {
@@ -16,5 +26,8 @@ module.exports = {
 
   typescript: {
     reactDocgen: 'react-docgen-typescript',
-  }
+  },
+
 };
+
+export default config;

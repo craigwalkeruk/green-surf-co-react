@@ -95,8 +95,8 @@ function HeroGeometric({
     };
 
     return (
-        <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#030303]">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.05] via-transparent to-rose-500/[0.05] blur-3xl" />
+        <section className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#030303]" aria-labelledby="hero-title">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.05] via-transparent to-rose-500/[0.05] blur-3xl" aria-hidden="true" />
 
             <div className="absolute inset-0 overflow-hidden">
                 <ElegantShape
@@ -166,7 +166,7 @@ function HeroGeometric({
                         initial="hidden"
                         animate="visible"
                     >
-                        <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold mb-6 md:mb-8 tracking-tight">
+                        <h1 id="hero-title" className="text-4xl sm:text-6xl md:text-8xl font-bold mb-6 md:mb-8 tracking-tight">
                             <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/80">
                                 {title1}
                             </span>
@@ -196,7 +196,7 @@ function HeroGeometric({
             </div>
 
             <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-[#030303]/80 pointer-events-none" />
-        </div>
+        </section>
     );
 }
 

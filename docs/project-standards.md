@@ -75,3 +75,15 @@ To enforce this, you can use ESLint:
   },
 ],
 ```
+
+#### React Best Practices (Next.js Inspired)
+
+Adopting modern React patterns used by frameworks like Next.js can significantly improve the performance, accessibility, and maintainability of your application.
+
+- **Component Composition**: Prefer passing components as props (e.g., `children`) to keep your component tree flexible and avoid prop drilling.
+- **Semantic HTML**: Use proper HTML tags (`main`, `header`, `section`, `nav`, `h1-h6`) instead of generic `div`s for better SEO and accessibility.
+- **Accessibility (a11y)**: Ensure all interactive elements have proper `aria-labels` and that headings are linked to their sections via `aria-labelledby`.
+- **Image Optimization**: Use a centralized `Image` component that defaults to `loading="lazy"` and `decoding="async"` for better Core Web Vitals.
+- **Lucide React**: Standardize on `lucide-react` for all icons to ensure consistency and ease of use compared to raw SVGs.
+- **Colocation**: Keep related logic, tests, and types as close as possible to the component they serve.
+- **Mental Model of Server/Client**: Even in a client-side app, think about which components are "static" vs "interactive" to keep client-side state minimal and well-contained.
