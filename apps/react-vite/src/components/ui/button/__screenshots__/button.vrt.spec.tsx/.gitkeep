@@ -1,0 +1,15 @@
+# Place your Figma-exported reference images here
+#
+# Required images (export from Figma):
+# - Button-default.png
+# - Button-default-sm.png
+# - Button-default-lg.png
+# - Button-destructive.png
+# - Button-outline.png
+# - Button-secondary.png
+# - Button-ghost.png
+# - Button-link.png
+#
+# Export settings:
+# - Format: PNG
+# - Scale: 2x (for retina displays)

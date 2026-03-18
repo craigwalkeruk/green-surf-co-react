@@ -9,6 +9,12 @@
     "preview": "vite preview",
     "test": "vitest",
     "test-e2e": "pm2 start \"yarn run-mock-server\" --name server && yarn playwright test",
+    "test-vrt": "vitest --config vitest.config.vrt.ts",
+    "test-vrt:watch": "vitest --config vitest.config.vrt.ts --watch",
+    "test-vrt-docker": "docker build -f Dockerfile.vrt -t bulletproof-vrt . && docker run --rm -v \"$PWD\":/app -v /app/node_modules bulletproof-vrt 2>&1",
+    "test-vrt-docker:watch": "docker build -f Dockerfile.vrt -t bulletproof-vrt . && docker run --rm -it -v \"$PWD\":/app -v /app/node_modules bulletproof-vrt yarn test-vrt-docker-run -- --watch",
+    "test-vrt-docker-run": "vitest --config vitest.config.vrt.docker.ts",
+    "test-vrt:report": "vite-node src/test/generate-vrt-report.cli.ts",
     "prepare": "husky",
     "lint": "oxlint src && eslint src",
     "check-types": "tsc --project tsconfig.json --pretty --noEmit",
@@ -114,7 +120,12 @@
     "vite": "^5.2.10",
     "vite-node": "^1.6.0",
     "vite-tsconfig-paths": "^4.3.2",
-    "vitest": "^2.1.4"
+    "vitest": "^2.1.4",
+    "@vitest/browser": "^2.1.4",
+    "vitest-browser-react": "^0.0.4",
+    "pixelmatch": "^6.0.0",
+    "pngjs": "^7.0.0",
+    "playwright": "^1.43.1"
   },
   "msw": {
     "workerDirectory": "public"
