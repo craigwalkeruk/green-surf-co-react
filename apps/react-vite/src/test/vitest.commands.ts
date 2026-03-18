@@ -199,6 +199,7 @@ export const compareWithFigma: BrowserCommand<[
   await fs.writeFile(metadataPath, JSON.stringify({
     matches,
     diffPercentage,
+    maxDiffPercentage,
     sizeMismatch,
     errorMessage,
     baselineSize: { width: baseline.width, height: baseline.height },

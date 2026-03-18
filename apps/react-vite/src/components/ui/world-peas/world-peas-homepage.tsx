@@ -6,84 +6,89 @@ import breadImg from '@/assets/world-peas/bread.png';
 import { cn } from '@/utils/cn';
 
 const Header = () => (
-  <header className="flex items-center justify-between px-6 py-8 md:px-12 lg:px-24">
-    <h1 className="text-2xl md:text-3xl font-serif text-[#426b1f] font-medium tracking-tight">
+  <header className="flex items-center justify-between px-[56px] h-[112px]">
+    <h1 className="text-[32px] font-serif text-[#426b1f] font-medium tracking-[-0.32px] leading-none">
       World Peas
     </h1>
-    <nav aria-label="Main Navigation" className="hidden md:flex items-center space-x-8 text-sm md:text-base font-normal">
+    <nav aria-label="Main Navigation" className="hidden md:flex items-center space-x-[40px] text-base font-normal">
       <a href="#" className="hover:text-[#426b1f] transition-colors">Shop</a>
       <a href="#" className="hover:text-[#426b1f] transition-colors">Newstand</a>
       <a href="#" className="hover:text-[#426b1f] transition-colors">Who we are</a>
       <a href="#" className="hover:text-[#426b1f] transition-colors">My profile</a>
     </nav>
-    <Button className="bg-[#426b1f] hover:bg-[#355619] rounded-lg px-6 h-12 text-white">
+    <Button className="bg-[#426b1f] hover:bg-[#355619] rounded-lg px-6 h-12 text-white text-base font-semibold">
       Basket (3)
     </Button>
   </header>
 );
 
 const Hero = () => (
-  <section className="px-6 py-16 md:px-12 lg:px-24 flex flex-col items-center text-center">
-    <h2 className="text-4xl md:text-5xl lg:text-7xl font-serif leading-tight max-w-4xl tracking-tight">
+  <section className="px-24 pt-[167px] flex flex-col items-center text-center">
+    <h2 className="text-[64px] font-serif leading-[1.2] tracking-[-1.28px] max-w-none mx-auto">
       We’re <span className="italic">farmers</span>, <span className="italic">purveyors</span>, and <span className="italic">eaters</span> of organically grown food.
     </h2>
-    <Button className="mt-12 bg-[#426b1f] hover:bg-[#355619] rounded-lg px-8 h-16 text-lg md:text-xl">
-      Browse our shop
-    </Button>
+    <div className="flex justify-center w-full mt-[38px]">
+      <Button className="bg-[#426b1f] hover:bg-[#355619] rounded-lg px-8 h-[64px] w-[227px] text-[20px] font-semibold leading-[1.3]">
+        Browse our shop
+      </Button>
+    </div>
   </section>
 );
 
 const ImageGrid = () => (
-  <section className="px-6 py-12 md:px-12 lg:px-24 grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-    <div className="md:col-span-5 aspect-[3/4] overflow-hidden">
+  <section className="px-24 pt-[180px] grid grid-cols-12 gap-x-[15px] items-start">
+    <div className="col-span-5 h-[693px] overflow-hidden">
       <Image 
         src={leavesImg} 
         alt="Fresh green leaves" 
         className="w-full h-full object-cover"
+        loading="eager"
       />
     </div>
-    <div className="md:col-span-7 flex flex-col">
-      <div className="aspect-video overflow-hidden">
+    <div className="col-span-1"></div>
+    <div className="col-span-6 flex flex-col pt-[90px]">
+      <div className="h-[480px] overflow-hidden">
         <Image 
           src={breadImg} 
           alt="Artisan bread with fresh produce" 
           className="w-full h-full object-cover"
+          loading="eager"
         />
       </div>
-      <p className="mt-4 text-sm md:text-base max-w-md">
-        <span className="font-semibold">Central California</span> — The person who grew these was located in Central California and, er, hopefully very well-compensated.
+      <p className="mt-[16px] text-sm leading-[1.6]">
+        <span className="font-medium">Central California</span> — <span className="font-light text-black">The person who grew these was located in Central California and, er, hopefully very well-compensated.</span>
       </p>
     </div>
   </section>
 );
 
 const Beliefs = () => (
-  <section className="px-6 py-24 md:px-12 lg:px-24 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-16">
-    <div className="md:col-span-3">
-      <h3 className="text-xs md:text-sm font-semibold uppercase tracking-widest">
+  <section className="px-24 pt-[210px] grid grid-cols-12 gap-x-[15px] pb-[160px]">
+    <div className="col-span-2">
+      <h3 className="text-sm font-semibold uppercase tracking-[0.56px] pt-[5px]">
         What we believe
       </h3>
     </div>
-    <div className="md:col-span-9 space-y-8 text-lg md:text-xl leading-relaxed">
-      <p>
-        We believe in produce. Tasty produce. Produce like:
-      </p>
-      <p className="text-gray-700">
-        Apples. Oranges. Limes. Lemons. Guavas. Carrots. Cucumbers. Jicamas. Cauliflowers. Brussels sprouts. Shallots. Japanese eggplants. Asparagus. Artichokes—Jerusalem artichokes, too. Radishes. Broccoli. Baby broccoli. Broccolini. Bok choy. Scallions. Ginger. Cherries. Raspberries. Cilantro. Parsley. Dill.
-      </p>
-      <p>
-        What are we forgetting?
-      </p>
-      <p className="text-gray-700">
-        Oh! Onions. Yams. Avocados. Lettuce. Arugula (to some, “rocket”). Persian cucumbers, in addition to aforementioned “normal” cucumbers. Artichokes. Zucchinis. Pumpkins. Squash (what some cultures call pumpkins). Sweet potatoes and potato-potatoes. Jackfruit. Monk fruit. Fruit of the Loom. Fruits of our labor (this website). Sorrel. Pineapple. Mango. Gooseberries. Blackberries. Tomatoes. Heirloom tomatoes. Beets. Chives. Corn. Endive. Escarole, which, we swear, we’re vendors of organic produce, but if you asked us to describe what escaroles are...
-      </p>
+    <div className="col-span-10 text-[20px] leading-[1.6]">
+      <div className="max-w-[822px]">
+        <p>We believe in produce. Tasty produce. Produce like:</p>
+        <p className="mt-[32px]">
+          Apples. Oranges. Limes. Lemons. Guavas. Carrots. Cucumbers. Jicamas. Cauliflowers. Brussels sprouts. Shallots. Japanese eggplants. Asparagus. Artichokes—Jerusalem artichokes, too. Radishes. Broccoli. Baby broccoli. Broccolini. Bok choy. Scallions. Ginger. Cherries. Raspberries. Cilantro. Parsley. Dill.
+        </p>
+        <p className="mt-[32px]">
+          What are we forgetting?
+        </p>
+        <p className="mt-[32px]">
+          Oh! Onions. Yams. Avocados. Lettuce. Arugula (to some, “rocket”). Persian cucumbers, in addition to aforementioned “normal” cucumbers. Artichokes. Zucchinis. Pumpkins. Squash (what some cultures call pumpkins). Sweet potatoes and potato-potatoes. Jackfruit. Monk fruit. Fruit of the Loom. Fruits of our labor (this website). Sorrel. Pineapple. Mango. Gooseberries. Blackberries. Tomatoes. Heirloom tomatoes. Beets. Chives. Corn. Endive. Escarole, which, we swear, we’re vendors of organic produce, but if you asked us to describe what escaroles are...
+        </p>
+      </div>
     </div>
   </section>
 );
 
 export const WorldPeasHomepage = () => {
   return (
-    <div className="bg-white min-h-screen text-black font-sans">
+    <div className="bg-white text-black font-sans w-[1440px] h-[2092px] relative overflow-hidden">
       <Header />
       <main>
         <Hero />

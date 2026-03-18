@@ -5,6 +5,9 @@
  * Can be used as:
  * 1. Vitest reporter (auto-generates after each test run)
  * 2. Standalone script: npx tsx src/test/generate-vrt-report.ts
+ *
+ * THIS IS 100% vibe coded and not code reviewed, It's kind of a blackbox I don't want to know
+ * what is happening under the hood it works for my local testing
  */
 
 import { promises as fs } from 'node:fs';
@@ -23,6 +26,7 @@ interface ComparisonResult {
   passed: boolean;
   errorMessage: string | null;
   diffPercentage: number | null;
+  maxDiffPercentage: number | null;
   imageWidth: number | null;
   imageHeight: number | null;
 }
@@ -66,6 +70,7 @@ async function findComparisonImages(): Promise<ComparisonResult[]> {
         // Read metadata if available
         let errorMessage: string | null = null;
         let diffPercentage: number | null = null;
+        let maxDiffPercentage: number | null = null;
         let imageWidth: number | null = null;
         let imageHeight: number | null = null;
         let passed: boolean | null = null;
@@ -77,6 +82,7 @@ async function findComparisonImages(): Promise<ComparisonResult[]> {
             const metadata = JSON.parse(metadataContent);
             errorMessage = metadata.errorMessage || null;
             diffPercentage = metadata.diffPercentage ?? null;
+            maxDiffPercentage = metadata.maxDiffPercentage ?? null;
             passed = metadata.matches ?? null;
             // Use the larger dimension from baseline or screenshot
             const baselineW = metadata.baselineSize?.width ?? 0;
@@ -101,6 +107,7 @@ async function findComparisonImages(): Promise<ComparisonResult[]> {
             passed: passed !== null ? passed : !hasDiff,
             errorMessage,
             diffPercentage,
+            maxDiffPercentage,
             imageWidth,
             imageHeight,
           });
@@ -231,8 +238,9 @@ async function generateHtml(results: ComparisonResult[]): Promise<string> {
       padding: 0.5rem 1rem;
       background: var(--bg-card);
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
+      gap: 0.75rem;
       cursor: pointer;
     }
 
@@ -254,6 +262,20 @@ async function generateHtml(results: ComparisonResult[]): Promise<string> {
     .spec-file {
       color: var(--text-secondary);
       font-size: 0.8rem;
+    }
+
+    .diff-stats {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-family: monospace;
+    }
+
+    .diff-stats .actual {
+      color: var(--text-primary);
+    }
+
+    .diff-stats .threshold {
+      color: var(--text-secondary);
     }
 
     .test-status {
@@ -518,16 +540,21 @@ async function generateHtml(results: ComparisonResult[]): Promise<string> {
       const card = document.createElement('div');
       card.className = 'test-card';
       card.dataset.status = comparison.passed ? 'pass' : 'fail';
+      const diffStatsHtml = comparison.diffPercentage !== null
+        ? \`<span class="diff-stats"><span class="actual">\${comparison.diffPercentage.toFixed(2)}%</span> / <span class="threshold">\${comparison.maxDiffPercentage !== null ? comparison.maxDiffPercentage.toFixed(2) : '?'}%</span></span>\`
+        : '';
+
       card.innerHTML = \`
         <div class="test-header" onclick="toggleCard(\${index})">
+          <span class="test-status \${comparison.passed ? 'match' : 'diff'}">
+            \${comparison.passed ? 'PASS' : 'FAIL'}
+          </span>
           <div class="test-info">
             <div class="test-name">\${comparison.testName}</div>
             <div class="spec-file">\${comparison.specFile}</div>
+            \${diffStatsHtml}
           </div>
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <span class="test-status \${comparison.passed ? 'match' : 'diff'}">
-              \${comparison.passed ? 'PASS' : 'FAIL'}
-            </span>
+          <div style="display: flex; align-items: center; gap: 1rem; margin-left: auto;">
             <svg class="expand-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>

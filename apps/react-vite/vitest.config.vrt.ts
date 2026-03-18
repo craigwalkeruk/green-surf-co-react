@@ -27,6 +27,7 @@ export default defineConfig({
       },
       screenshotFailures: false,
       screenshotDirectory: '.vitest-attachments/temp',
+      viewport: { width: 1440, height: 2092 },
     },
     // Use verbose reporter + custom VRT reporter that auto-generates HTML report
     reporters: ['verbose', new VrtReporter()],
