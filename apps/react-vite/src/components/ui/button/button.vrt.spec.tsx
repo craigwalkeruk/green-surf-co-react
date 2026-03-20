@@ -1,10 +1,9 @@
 import { expect, it } from 'vitest';
-import { page } from '@vitest/browser/context';
 import * as React from 'react';
 import { render } from 'vitest-browser-react';
 import { Button } from './button';
 
-// Wait for fonts to load
+// Wait for fonts to load before running tests
 await document.fonts.ready;
 
 
@@ -18,10 +17,9 @@ it('Button-default', async () => {
     </div>
   );
 
-  const screenshotTarget = page.getByTestId('screenshot-container');
-
   // Compare with Figma reference using the custom matcher
-  await expect(screenshotTarget).toMatchFigmaSnapshot({
+  // Pass the selector string directly to use Playwright for screenshot capture
+  await expect('[data-testid="screenshot-container"]').toMatchFigmaSnapshot({
     imageName: 'Button-default.png',
   });
 });

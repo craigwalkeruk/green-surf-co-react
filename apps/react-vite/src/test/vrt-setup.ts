@@ -8,7 +8,5 @@
 // Import global styles for consistent rendering
 import '@/index.css';
 
-// Import the Figma snapshot matcher (only in browser mode)
-if (typeof (globalThis as { __vitest_browser__?: boolean }).__vitest_browser__ !== 'undefined') {
-  import('./figma-snapshot-matcher');
-}
+// Import the Figma snapshot matcher
+import './figma-snapshot-matcher';

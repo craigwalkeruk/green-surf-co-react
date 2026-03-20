@@ -1,9 +1,7 @@
-/// <reference types="vitest" />
-/// <reference types="vite/client" />
-
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 import viteTsconfigPaths from 'vite-tsconfig-paths';
+import { playwright } from '@vitest/browser-playwright';
 import { compareWithFigma } from './src/test/vitest.commands';
 import VrtReporter from './src/test/generate-vrt-report';
 
@@ -17,15 +15,14 @@ export default defineConfig({
     setupFiles: ['./src/test/vrt-setup.ts'],
     browser: {
       enabled: true,
-      name: 'chromium',
-      provider: 'playwright',
-      headless: true,
-      providerOptions: {
-        contextOptions: {
-          deviceScaleFactor: 1,
-          viewport: { width: 1920, height: 1080 },
+      provider: playwright(),
+      ui: false,
+      instances: [
+        {
+          browser: 'chromium',
+          headless: true,
         },
-      },
+      ],
       commands: { compareWithFigma },
       // @ts-expect-error - Custom config option for compareWithFigma command
       compareWithFigmaOptions: {

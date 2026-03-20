@@ -31,13 +31,13 @@ export interface CompareWithFigmaResult {
  * - Always logs diff percentage and generates diff image
  * - Outputs diffs to .vitest-attachments directory
  *
- * @param screenshotBase64 - Base64-encoded PNG screenshot taken from the test
+ * @param selectorOrBase64 - Either a CSS selector string to capture, or Base64-encoded PNG screenshot
  * @param options - Optional comparison options (including optional imageName override)
  */
 export const compareWithFigma: BrowserCommand<[
-  screenshotBase64: string,
+  selectorOrBase64: string,
   options?: CompareWithFigmaOptions & { imageName?: string }
-]> = async (context, screenshotBase64, options = {}) => {
+]> = async (context, selectorOrBase64, options = {}) => {
   // Get testPath and testName from context
   const testPath = context.testPath ?? '';
   const testName = (context as BrowserCommandContext & { task?: { name?: string } }).task?.name;
@@ -46,8 +46,149 @@ export const compareWithFigma: BrowserCommand<[
   const browserConfig = context.project?.config?.browser as unknown as Record<string, unknown> | undefined;
   const globalOptions = (browserConfig?.['compareWithFigmaOptions'] ?? {}) as CompareWithFigmaOptions;
 
-  // Decode the base64 screenshot passed from the test
-  const screenshotBuffer = Buffer.from(screenshotBase64, 'base64');
+  // Determine if input is a selector or base64 data
+  // Base64 PNG data starts with 'iVBORw0KGgo' (the base64 encoding of PNG header)
+  const isBase64 = selectorOrBase64.startsWith('iVBOR') || selectorOrBase64.length > 1000;
+
+  let screenshotBuffer: Buffer;
+
+  if (isBase64) {
+    // Legacy path: decode the base64 screenshot passed from the test
+    screenshotBuffer = Buffer.from(selectorOrBase64, 'base64');
+  } else {
+    // New path: take screenshot directly using Playwright via the context
+    // This avoids the Vitest locator scaling issues
+    if (context.provider.name !== 'playwright') {
+      return {
+        matches: false,
+        diffPercentage: 100,
+        sizeMismatch: false,
+        message: `Selector-based screenshots only supported with Playwright provider (got: ${context.provider.name})`,
+      };
+    }
+
+    try {
+      // Use Playwright's native screenshot API to bypass Vitest's iframe scaling issues
+      // (See: https://github.com/vitest-dev/vitest/issues/9363)
+      // context.iframe is a FrameLocator, context.frame() returns the actual Frame
+      const frameLocator = context.iframe;
+      const frame = await context.frame();
+
+      // Get the element's actual dimensions from the DOM (unscaled CSS pixels)
+      const elementHandle = await frameLocator.locator(selectorOrBase64).elementHandle();
+      if (!elementHandle) {
+        throw new Error(`Element not found: ${selectorOrBase64}`);
+      }
+
+      const domRect = await elementHandle.evaluate((el) => {
+        const rect = el.getBoundingClientRect();
+        return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+      });
+
+      // Target dimensions from DOM (CSS pixels) - this is what Figma baselines use
+      const targetWidth = Math.round(domRect.width);
+      const targetHeight = Math.round(domRect.height);
+
+      // Get the element's outer HTML to re-render in a clean page
+      const elementHtml = await elementHandle.evaluate((el) => el.outerHTML);
+
+      // Get all stylesheets from the iframe to include in the new page
+      // frame.evaluate() works on the actual Frame object
+      const styles = await frame.evaluate(() => {
+        const styleSheets = Array.from(document.styleSheets);
+        let css = '';
+        for (const sheet of styleSheets) {
+          try {
+            const rules = Array.from(sheet.cssRules || []);
+            css += rules.map(rule => rule.cssText).join('\n');
+          } catch {
+            // Skip cross-origin stylesheets
+          }
+        }
+        return css;
+      });
+
+      // Create a new browser context with deviceScaleFactor: 1 for accurate screenshots
+      // This bypasses Vitest's iframe scaling issues on retina displays
+      // context.context is the BrowserContext, from which we can get the browser
+      const browser = context.context.browser();
+      if (!browser) {
+        throw new Error('Could not access browser instance from context');
+      }
+
+      const newContext = await browser.newContext({
+        deviceScaleFactor: 1,
+        viewport: { width: targetWidth + 100, height: targetHeight + 100 },
+      });
+
+      try {
+        const newPage = await newContext.newPage();
+
+        // Get the base URL from the original frame for resolving relative URLs
+        const baseUrl = await frame.evaluate(() => window.location.href);
+
+        // Build a minimal HTML page with the element and styles
+        // Include base tag so relative URLs (images, etc.) resolve correctly
+        const html = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <base href="${baseUrl}">
+            <style>${styles}</style>
+            <style>
+              body { margin: 0; padding: 0; }
+              #root { display: inline-block; }
+            </style>
+          </head>
+          <body>
+            <div id="root">${elementHtml}</div>
+          </body>
+          </html>
+        `;
+
+        await newPage.setContent(html, { waitUntil: 'networkidle' });
+
+        // Wait for fonts to load
+        await newPage.evaluate(() => document.fonts.ready);
+
+        // Wait for all images to load
+        await newPage.evaluate(async () => {
+          const images = document.querySelectorAll('img');
+          await Promise.all(
+            Array.from(images).map(async (img) => {
+              if (img.complete && img.naturalWidth > 0) {
+                return img.decode().catch(() => {});
+              }
+              return new Promise<void>((resolve) => {
+                img.addEventListener('load', async () => {
+                  await img.decode().catch(() => {});
+                  resolve();
+                });
+                img.addEventListener('error', () => resolve());
+                // Timeout after 5s to not block forever
+                setTimeout(() => resolve(), 5000);
+              });
+            }),
+          );
+        });
+
+        // Take screenshot of the element at 1:1 scale
+        const element = newPage.locator('#root > *');
+        screenshotBuffer = await element.screenshot();
+
+        await newPage.close();
+      } finally {
+        await newContext.close();
+      }
+    } catch (err) {
+      return {
+        matches: false,
+        diffPercentage: 100,
+        sizeMismatch: false,
+        message: `Failed to capture screenshot for selector "${selectorOrBase64}": ${err}`,
+      };
+    }
+  }
 
   // Resolve testPath relative to project root (process.cwd())
   const absoluteTestPath = path.isAbsolute(testPath) ? testPath : path.join(process.cwd(), testPath);

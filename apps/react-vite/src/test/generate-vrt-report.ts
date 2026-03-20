@@ -790,9 +790,18 @@ export async function generateReport(silent = false): Promise<string | null> {
  * Works with both single runs and watch mode.
  */
 export default class VrtReporter implements Reporter {
-  async onFinished(): Promise<void> {
+  async onTestRunEnd(): Promise<void> {
     // Generate report after all tests complete
     await generateReport(false);
   }
+}
+
+// CLI entry point - run generateReport when this file is executed directly
+// Check if this module is being run directly (not imported)
+const isMain = import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1]?.endsWith('generate-vrt-report.ts');
+
+if (isMain) {
+  generateReport(false).catch(console.error);
 }
 

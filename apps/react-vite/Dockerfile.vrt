@@ -1,22 +1,18 @@
-FROM mcr.microsoft.com/playwright:v1.43.1-noble
+FROM mcr.microsoft.com/playwright:v1.58.2-noble
 
 WORKDIR /app
 
-# Install Xvfb for virtual display
-RUN apt-get update && apt-get install -y xvfb && rm -rf /var/lib/apt/lists/*
-
-# Disable output buffering
 ENV NPM_CONFIG_PROGRESS=false
 ENV FORCE_COLOR=1
 
 # Copy package files
-COPY package.json yarn.lock ./
+COPY package.json package-lock.json ./
 
 # Install dependencies
-RUN yarn install --frozen-lockfile
+RUN npm ci
 
 # Copy source files
 COPY . .
 
-# Run tests with virtual display (non-headless, 2x DPI for retina-quality screenshots)
-CMD ["/bin/bash", "-c", "xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24 -dpi 192' yarn test-vrt-docker-run"]
+# Run VRT tests in headless mode
+CMD ["npm", "run", "test-vrt-docker-run"]

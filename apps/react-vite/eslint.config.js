@@ -11,7 +11,7 @@ import pluginPrettier from 'eslint-plugin-prettier';
 import pluginTestingLibrary from 'eslint-plugin-testing-library';
 import pluginJestDom from 'eslint-plugin-jest-dom';
 import pluginTailwindcss from 'eslint-plugin-tailwindcss';
-import pluginVitest from 'eslint-plugin-vitest';
+import pluginVitest from '@vitest/eslint-plugin';
 import pluginCheckFile from 'eslint-plugin-check-file'; // Assuming this is needed
 
 export default [
@@ -72,7 +72,7 @@ export default [
       ...pluginTestingLibrary.configs.react.rules,
       ...pluginJestDom.configs.recommended.rules,
       ...pluginTailwindcss.configs.recommended.rules,
-      ...pluginVitest.configs['legacy-recommended'].rules, // Adjust as per plugin
+      ...pluginVitest.configs.recommended.rules,
       'import/no-restricted-paths': [
         'error',
         {

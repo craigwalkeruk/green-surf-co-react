@@ -1,12 +1,12 @@
 import { expect } from 'vitest';
-import { commands } from '@vitest/browser/context';
+import { commands } from 'vitest/browser';
 import type { CompareWithFigmaOptions, CompareWithFigmaResult } from './vitest.commands';
 
 // Augment the BrowserCommands type to include our custom command
-declare module '@vitest/browser/context' {
+declare module 'vitest/browser' {
   interface BrowserCommands {
     compareWithFigma: (
-      screenshotBase64: string,
+      selectorOrBase64: string,
       options?: CompareWithFigmaOptions & { imageName?: string },
     ) => Promise<CompareWithFigmaResult>;
   }
@@ -21,7 +21,7 @@ export interface ToMatchFigmaSnapshotOptions extends CompareWithFigmaOptions {
  * Custom Vitest matcher for comparing screenshots against Figma reference images.
  *
  * This matcher:
- * 1. Takes a screenshot of the provided element/locator
+ * 1. Takes a screenshot of the provided element/locator using Playwright directly
  * 2. Compares against a Figma-exported reference image
  * 3. Generates diff images in .vitest-attachments/ for inspection
  *
@@ -29,30 +29,32 @@ export interface ToMatchFigmaSnapshotOptions extends CompareWithFigmaOptions {
  * - Never creates/updates baseline files - fails if reference is missing
  * - References stored in `__screenshots__/{spec-name}/{imageName}`
  * - Use `yarn test-vrt:report` to generate an interactive HTML report
+ * - Screenshots are taken via Playwright to avoid Vitest locator scaling issues
  */
 async function toMatchFigmaSnapshot(
   this: ReturnType<typeof expect.getState>,
-  received: { screenshot: (options?: { base64: true }) => Promise<{ base64: string }> } | string,
+  received: { selector: string } | string,
   options?: ToMatchFigmaSnapshotOptions,
 ): Promise<{ pass: boolean; message: () => string }> {
-  // Get screenshot base64 - either from locator or passed directly
-  let base64: string;
+  // Get the selector string - either from locator or passed directly
+  let selectorOrBase64: string;
 
   if (typeof received === 'string') {
-    base64 = received;
-  } else if (received && typeof received.screenshot === 'function') {
-    const screenshot = await received.screenshot({ base64: true });
-    base64 = screenshot.base64;
+    // Could be a selector or base64 - let the command figure it out
+    selectorOrBase64 = received;
+  } else if (received && typeof received.selector === 'string') {
+    // Vitest locator - selector is a property, not a method
+    selectorOrBase64 = received.selector;
   } else {
     return {
       pass: false,
       message: () =>
-        'Expected a Vitest Browser locator with screenshot() method or a base64 string',
+        'Expected a Vitest Browser locator with selector property or a selector/base64 string',
     };
   }
 
-  // Run the comparison
-  const result = (await commands.compareWithFigma(base64, options)) as CompareWithFigmaResult;
+  // Run the comparison - screenshot is taken server-side via Playwright
+  const result = (await commands.compareWithFigma(selectorOrBase64, options)) as CompareWithFigmaResult;
 
   return {
     pass: result.matches,
