@@ -65,7 +65,7 @@ const ImageGrid = () => (
 const Beliefs = () => (
   <section className="px-24 pt-[210px] grid grid-cols-12 gap-x-[15px] pb-[160px]">
     <div className="col-span-2">
-      <h3 className="text-sm font-semibold uppercase tracking-[0.56px] pt-[5px]">
+      <h3 className="text-sm font-semibold leading-[1.6] uppercase tracking-[0.56px] pt-[5px]">
         What we believe
       </h3>
     </div>

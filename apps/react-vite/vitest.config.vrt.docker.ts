@@ -31,7 +31,7 @@ export default defineConfig({
       screenshotFailures: false,
       screenshotDirectory: '.vitest-attachments/temp',
     },
-    // Use verbose reporter + custom VRT reporter that auto-generates HTML report
+    // Use verbose reporter + custom VRT reporter that auto-generates an HTML report
     reporters: ['verbose', new VrtReporter()],
   },
 });
