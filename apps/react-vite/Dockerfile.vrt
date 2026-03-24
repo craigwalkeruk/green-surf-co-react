@@ -2,7 +2,6 @@ FROM mcr.microsoft.com/playwright:v1.58.2-noble
 
 WORKDIR /app
 
-ENV NPM_CONFIG_PROGRESS=false
 ENV FORCE_COLOR=1
 
 # Copy package files
