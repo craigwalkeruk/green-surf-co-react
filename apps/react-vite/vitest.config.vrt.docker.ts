@@ -7,6 +7,11 @@ import VrtReporter from './src/test/generate-vrt-report';
 
 export default defineConfig({
   plugins: [react(), viteTsconfigPaths()],
+  server: {
+    watch: {
+      usePolling: true,
+    },
+  },
   test: {
     update: false,
     globals: true,
