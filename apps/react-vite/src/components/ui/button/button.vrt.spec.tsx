@@ -1,123 +1,111 @@
 import { expect, it } from 'vitest';
-import * as React from 'react';
 import { render } from 'vitest-browser-react';
+
 import { Button } from './button';
 
 // Wait for fonts to load before running tests
 await document.fonts.ready;
 
-
-
-
 // This test uses a screenshot exported from Figma as a golden source of truth
 it('Button-default', async () => {
   render(
-    <div data-testid="screenshot-container" style={{ width: '126px' }}>
+    <div data-testid="screenshot-container">
       <Button variant="default">Button</Button>
-    </div>
+    </div>,
   );
 
-  // Compare with Figma reference using the custom matcher
-  // Pass the selector string directly to use Playwright for screenshot capture
   await expect('[data-testid="screenshot-container"]').toMatchFigmaSnapshot({
     imageName: 'Button-default.png',
   });
 });
 
-it.skip('Button-default-sm', async () => {
+it.todo('Button-default-sm', async () => {
   render(
     <div data-testid="screenshot-container-sm" style={{ width: '80px' }}>
-      <Button variant="default" size="sm">Button</Button>
-    </div>
+      <Button variant="default" size="sm">
+        Button
+      </Button>
+    </div>,
   );
 
-  const screenshotTarget = page.getByTestId('screenshot-container-sm');
-
-  await expect(screenshotTarget).toMatchFigmaSnapshot({
+  await expect('[data-testid="screenshot-container-sm"]').toMatchFigmaSnapshot({
     imageName: 'Button-default-sm.png',
   });
 });
 
-it.skip('Button-default-lg', async () => {
+it.todo('Button-default-lg', async () => {
   render(
     <div data-testid="screenshot-container-lg" style={{ width: '106px' }}>
-      <Button variant="default" size="lg">Button</Button>
-    </div>
+      <Button variant="default" size="lg">
+        Button
+      </Button>
+    </div>,
   );
 
-  const screenshotTarget = page.getByTestId('screenshot-container-lg');
-
-  await expect(screenshotTarget).toMatchFigmaSnapshot({
+  await expect('screenshot-container-lg').toMatchFigmaSnapshot({
     imageName: 'Button-default-lg.png',
   });
 });
 
-it.skip('Button-destructive', async () => {
+it.todo('Button-destructive', async () => {
   render(
-    <div data-testid="screenshot-container-destructive" style={{ width: '88px' }}>
+    <div
+      data-testid="screenshot-container-destructive"
+      style={{ width: '88px' }}
+    >
       <Button variant="destructive">Button</Button>
-    </div>
+    </div>,
   );
 
-  const screenshotTarget = page.getByTestId('screenshot-container-destructive');
-
-  await expect(screenshotTarget).toMatchFigmaSnapshot({
+  await expect('screenshot-container-destructive').toMatchFigmaSnapshot({
     imageName: 'Button-destructive.png',
   });
 });
 
-it.skip('Button-outline', async () => {
+it.todo('Button-outline', async () => {
   render(
     <div data-testid="screenshot-container-outline" style={{ width: '88px' }}>
       <Button variant="outline">Button</Button>
-    </div>
+    </div>,
   );
 
-  const screenshotTarget = page.getByTestId('screenshot-container-outline');
-
-  await expect(screenshotTarget).toMatchFigmaSnapshot({
+  await expect('screenshot-container-outline').toMatchFigmaSnapshot({
     imageName: 'Button-outline.png',
   });
 });
 
-it.skip('Button-secondary', async () => {
+it.todo('Button-secondary', async () => {
   render(
     <div data-testid="screenshot-container-secondary" style={{ width: '88px' }}>
       <Button variant="secondary">Button</Button>
-    </div>
+    </div>,
   );
 
-  const screenshotTarget = page.getByTestId('screenshot-container-secondary');
-
-  await expect(screenshotTarget).toMatchFigmaSnapshot({
+  await expect('screenshot-container-secondary').toMatchFigmaSnapshot({
     imageName: 'Button-secondary.png',
   });
 });
 
-it.skip('Button-ghost', async () => {
+it.todo('Button-ghost', async () => {
   render(
     <div data-testid="screenshot-container-ghost" style={{ width: '88px' }}>
       <Button variant="ghost">Button</Button>
-    </div>
+    </div>,
   );
 
-  const screenshotTarget = page.getByTestId('screenshot-container-ghost');
-
-  await expect(screenshotTarget).toMatchFigmaSnapshot({
+  await expect('screenshot-container-ghost').toMatchFigmaSnapshot({
     imageName: 'Button-ghost.png',
   });
 });
 
-it.skip('Button-link', async () => {
+it.todo('Button-link', async () => {
   render(
     <div data-testid="screenshot-container-link" style={{ width: '88px' }}>
       <Button variant="link">Button</Button>
-    </div>
+    </div>,
   );
 
-  const screenshotTarget = page.getByTestId('screenshot-container-link');
-
-  await expect(screenshotTarget).toMatchFigmaSnapshot({
+  await expect('screenshot-container-link').toMatchFigmaSnapshot({
     imageName: 'Button-link.png',
   });
 });

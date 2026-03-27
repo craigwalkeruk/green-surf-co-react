@@ -7,7 +7,7 @@ import { cn } from '@/utils/cn';
 import { Spinner } from '../spinner';
 
 const buttonVariants = cva(
-  'font-medium inline-flex items-center justify-center whitespace-nowrap rounded-md text-base transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+  'font-medium inline-flex items-center justify-center whitespace-nowrap rounded-[6.5px] text-[17px] leading-[1.3] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
@@ -23,7 +23,7 @@ const buttonVariants = cva(
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
-        default: 'h-12 px-8 py-2',
+        default: 'h-12 px-[31px] py-2',
         sm: 'h-8 rounded-md px-3 text-xs',
         lg: 'h-10 rounded-md px-8',
         icon: 'size-9',
