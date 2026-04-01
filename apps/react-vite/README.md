@@ -1,15 +1,23 @@
 # Vitest Visual Regression Testing Example
 
-This is an example repository forked from [Bulletproof React](https://github.com/alan2207/bulletproof-react) for the purpose of demonstrating a custom **Vitest-based Visual Regression Testing (VRT)** setup.
+Originally forked from [Bulletproof React](https://github.com/alan2207/bulletproof-react), this repo is now an experiment sandbox for React workflows: Storybook integration, Figma-driven visual baselines, a custom Vitest VRT stack, and upcoming MUI trials.
 
-## Overview
+## Status & Purpose
 
-This project showcases a POC visual testing solution built on top of Vitest's browser mode, with Playwright as the test provider. The implementation includes:
+- Acts as a sandbox for rapid experiments; not a production app.
+- Focus areas: React component workflows, Storybook stories, Figma-driven visual baselines, and future MUI trials.
+- History preserved from the original Bulletproof React fork for reference.
 
-- **Custom `compareWithFigma` command** - A server-side Vitest command for pixel-perfect screenshot comparison
-- **Automated diff generation** - Visual diffs, actual, and reference images saved to `.vitest-attachments`
-- **HTML report generation** - Interactive reports showing test results with image comparisons
-- **Configuration** - Support for custom thresholds, size tolerance, and per-test options
+## Experiments (ordered by priority)
+
+1. **Visual Regression Testing (VRT) with Vitest + Playwright** — Primary focus. Includes:
+   - Custom `compareWithFigma` command for pixel comparisons against Figma exports
+   - Automated diffs (actual/reference/diff) saved to `.vitest-attachments`
+   - HTML report generation for interactive review
+   - Configurable thresholds and size tolerance per test
+2. **Storybook workflows** — Story-centric dev loops, verifying stories remain the single source for visual specs.
+3. **Figma baseline management** — Keeping exported reference images in sync with component changes.
+4. **MUI experiments (upcoming)** — Theming, component overrides, and VRT coverage for MUI-based UI.
 
 ## Getting started with VRT
 
@@ -34,9 +42,8 @@ Prerequisites:
 To set up the app execute the following commands.
 
 ```bash
-git clone https://github.com/your-fork/bulletproof-react.git
-cd bulletproof-react
-cd apps/react-vite
+git clone https://github.com/craigwalkeruk/green-surf-co-react.git
+cd green-surf-co-react/apps/react-vite
 cp .env.example .env
 yarn install
 ```

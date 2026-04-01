@@ -17,6 +17,7 @@
 # storybook
 migration-storybook.log
 storybook.log
+debug-storybook.log
 storybook-static
 
 
@@ -38,4 +39,4 @@ yarn-error.log*
 
 # local
 mocked-db.json
-
+.ai/
