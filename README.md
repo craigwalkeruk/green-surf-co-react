@@ -1,14 +1,12 @@
-# Vitest Visual Regression Testing Example
+# React - Bulletproof Vite Fork 
 
-Originally forked from [Bulletproof React](https://github.com/alan2207/bulletproof-react), this repo is now an experiment sandbox for React workflows: Storybook integration, Figma-driven visual baselines, a custom Vitest VRT stack, and upcoming MUI trials.
+This project is a test for developing and evaluating UI development SDLC and flows. With the goal to build examples for situations where the flow can be improved. E.g. When using Figma and a UX Designer hands you and new screen, then how do you best convert that design into code. 
 
-## Status & Purpose
+Originally forked from [Bulletproof React](https://github.com/alan2207/bulletproof-react), it is now an experiment sandbox for Storybook integration, Figma-driven visual baselines, a custom Vitest VRT stack and MUI. 
 
-- Acts as a sandbox for rapid experiments; not a production app.
-- Focus areas: React component workflows, Storybook stories, Figma-driven visual baselines, and future MUI trials.
-- History preserved from the original Bulletproof React fork for reference.
+As a sandbox for rapid experiments this is not production code.
 
-## Experiments (ordered by priority)
+## Experiments
 
 1. **Visual Regression Testing (VRT) with Vitest + Playwright** — Primary focus. Includes:
    - Custom `compareWithFigma` command for pixel comparisons against Figma exports
