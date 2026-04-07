@@ -1,70 +1,61 @@
-# Bulletproof React 🛡️ ⚛️
+# Vitest Visual Regression Testing Example
 
-[![MIT License](https://img.shields.io/github/license/alan2207/bulletproof-react)](https://github.com/alan2207/bulletproof-react/blob/master/LICENSE)
-[![Next.js App CI](https://github.com/alan2207/bulletproof-react/actions/workflows/nextjs-app-ci.yml/badge.svg)](https://github.com/alan2207/bulletproof-react/actions/workflows/nextjs-app-ci.yml)
-[![Next.js Pages CI](https://github.com/alan2207/bulletproof-react/actions/workflows/nextjs-pages-ci.yml/badge.svg)](https://github.com/alan2207/bulletproof-react/actions/workflows/nextjs-pages-ci.yml)
-[![React Vite CI](https://github.com/alan2207/bulletproof-react/actions/workflows/react-vite-ci.yml/badge.svg)](https://github.com/alan2207/bulletproof-react/actions/workflows/react-vite-ci.yml)
+Originally forked from [Bulletproof React](https://github.com/alan2207/bulletproof-react), this repo is now an experiment sandbox for React workflows: Storybook integration, Figma-driven visual baselines, a custom Vitest VRT stack, and upcoming MUI trials.
 
-A simple, scalable, and powerful architecture for building production ready React applications.
+## Status & Purpose
 
-## Introduction
+- Acts as a sandbox for rapid experiments; not a production app.
+- Focus areas: React component workflows, Storybook stories, Figma-driven visual baselines, and future MUI trials.
+- History preserved from the original Bulletproof React fork for reference.
 
-React is an excellent tool for building front-end applications. It has a diverse ecosystem with hundreds of great libraries for literally anything you might need. However, being forced to make so many choices can be overwhelming. It is also very flexible, you can write React applications in any way you like, but that flexibility comes with a cost. Since there is no pre-defined architecture that developers can follow, it often leads to a messy, inconsistent, and over-complicated codebase.
+## Experiments (ordered by priority)
 
-This repo attempts to present a way of creating React applications using some of the best tools in the ecosystem with a good project structure that scales very well. Based on my experience working with a lot of different codebases, this architecture turns out to be the most effective.
+1. **Visual Regression Testing (VRT) with Vitest + Playwright** — Primary focus. Includes:
+   - Custom `compareWithFigma` command for pixel comparisons against Figma exports
+   - Automated diffs (actual/reference/diff) saved to `.vitest-attachments`
+   - HTML report generation for interactive review
+   - Configurable thresholds and size tolerance per test
+2. **Storybook workflows** — Story-centric dev loops, verifying stories remain the single source for visual specs.
+3. **Figma baseline management** — Keeping exported reference images in sync with component changes.
+4. **MUI experiments (upcoming)** — Theming, component overrides, and VRT coverage for MUI-based UI.
 
-The goal here is to serve as a collection of resources and best practices when developing React applications. It is supposed to showcase solving most of the real-world problems of an application in a practical way and help developers write better applications.
+## Getting started with VRT
 
-Feel free to explore the sample app codebase to get the most value out of the repo.
+Run visual regression tests:
 
-> 🤝 **Looking for help implementing these patterns at your company?** [Get in touch](mailto:alan2207@live.com)
+```bash
+yarn test:vrt              # Run VRT tests
+yarn test:vrt:report       # Generate and open HTML report
+```
 
-## What makes a React application "bulletproof"?
+The custom VRT implementation is defined in [`src/test/vitest.commands.ts`](src/test/vitest.commands.ts) and provides a `compareWithFigma` command that compares rendered components against reference images.
 
-This repo doesn't aim to be a silver bullet for all React applications as there are many different use cases, but it tries to provide a solid foundation for building applications based on the following principles:
+📖 **[Read the detailed VRT documentation →](src/test/README.md)**
 
-- Easy to get started with
-- Simple to understand and maintain
-- Uses the right tools for the job
-- Clean boundaries between different parts of the application
-- Everyone on the team is on the same page when it comes to how things are done
-- Secure
-- Performant
-- Scalable in terms of codebase and team size
-- Issues detectable as early as possible
+## Get Started in general
 
-#### Disclaimer:
+Prerequisites:
 
-This is not supposed to be a template, boilerplate or a framework. It is an opinionated guide that shows how to do some things in a certain way. You are not forced to do everything exactly as it is shown here, decide what works best for you and your team and stay consistent with your style.
+- Node 20+
+- Yarn 1.22+
 
-To get most out of it, do not get limited by the technologies used in this sample app, but rather focus on the principles and the concepts that are being presented here. The tools and libraries used here are just a suggestion, you can always replace them with something that fits your needs better. Sometimes, your project might require a slightly different approach, and that's totally fine.
+To set up the app execute the following commands.
 
-## Table Of Contents:
+```bash
+git clone https://github.com/craigwalkeruk/green-surf-co-react.git
+cd green-surf-co-react/apps/react-vite
+cp .env.example .env
+yarn install
+```
 
-- [💻 Application Overview](docs/application-overview.md)
-- [⚙️ Project Standards](docs/project-standards.md)
-- [🗄️ Project Structure](docs/project-structure.md)
-- [🧱 Components And Styling](docs/components-and-styling.md)
-- [📡 API Layer](docs/api-layer.md)
-- [🗃️ State Management](docs/state-management.md)
-- [🧪 Testing](docs/testing.md)
-- [⚠️ Error Handling](docs/error-handling.md)
-- [🔐 Security](docs/security.md)
-- [🚄 Performance](docs/performance.md)
-- [🌐 Deployment](docs/deployment.md)
-- [📚 Additional Resources](docs/additional-resources.md)
+##### `yarn dev`
 
-## Contributing
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-Contributions are always welcome! If you have any ideas, suggestions, fixes, feel free to contribute. You can do that by going through the following steps:
+##### `yarn build`
 
-1. Clone this repo
-2. Create a branch: `git checkout -b your-feature`
-3. Execute the `yarn prepare` script.
-4. Make some changes
-5. Test your changes
-6. Push your branch and open a Pull Request
+Builds the app for production to the `dist` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-## License
-
-[MIT](/LICENSE)
+See the section about [deployment](https://vitejs.dev/guide/static-deploy) for more information.
