@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "storybook-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@latest",
+        "http://127.0.0.1:6006/mcp"
+      ]
+    },
+    "figma-desktop": {
+        "url": "http://127.0.0.1:3845/mcp"
+    }
+  }
+}
