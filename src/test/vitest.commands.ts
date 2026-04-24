@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import pixelmatch from 'pixelmatch';
 // @ts-expect-error - pngjs has no type declarations
@@ -11,6 +12,87 @@ export interface CompareWithFigmaOptions {
   threshold?: number;
   maxDiffPercentage?: number;
   sizeTolerance?: number; // Allow small size differences (default: 2px)
+  /**
+   * When set, the baseline is a live Playwright capture of this HTML file
+   * (viewport and clip match the captured component PNG size), instead of
+   * `__screenshots__/{spec}/{imageName}`.
+   */
+  htmlReferencePath?: string;
+}
+
+async function captureHtmlReferenceClip(
+  context: BrowserCommandContext,
+  absoluteHtmlPath: string,
+  clipWidth: number,
+  clipHeight: number,
+): Promise<{ ok: true; buffer: Buffer } | { ok: false; message: string }> {
+  if (context.provider.name !== 'playwright') {
+    return {
+      ok: false,
+      message: `HTML reference capture only supported with Playwright provider (got: ${context.provider.name})`,
+    };
+  }
+
+  const browser = context.context.browser();
+  if (!browser) {
+    return {
+      ok: false,
+      message: 'Could not access browser instance from context',
+    };
+  }
+
+  const newContext = await browser.newContext({
+    deviceScaleFactor: 1,
+    viewport: { width: Math.max(1, clipWidth), height: Math.max(1, clipHeight) },
+  });
+
+  try {
+    const page = await newContext.newPage();
+    await page.goto(pathToFileURL(absoluteHtmlPath).href, {
+      waitUntil: 'networkidle',
+    });
+
+    await page.evaluate(() => document.fonts.ready);
+
+    await page.evaluate(async () => {
+      const images = document.querySelectorAll('img');
+      await Promise.all(
+        Array.from(images).map(async (img) => {
+          if (img.complete && img.naturalWidth > 0) {
+            return img.decode().catch(() => {});
+          }
+          return new Promise<void>((resolve) => {
+            img.addEventListener('load', async () => {
+              await img.decode().catch(() => {});
+              resolve();
+            });
+            img.addEventListener('error', () => resolve());
+            setTimeout(() => resolve(), 5000);
+          });
+        }),
+      );
+    });
+
+    const buffer = await page.screenshot({
+      type: 'png',
+      clip: {
+        x: 0,
+        y: 0,
+        width: Math.max(1, clipWidth),
+        height: Math.max(1, clipHeight),
+      },
+    });
+
+    await page.close();
+    return { ok: true, buffer: Buffer.from(buffer) };
+  } catch (err) {
+    return {
+      ok: false,
+      message: `Failed to capture HTML reference "${absoluteHtmlPath}": ${err}`,
+    };
+  } finally {
+    await newContext.close();
+  }
 }
 
 /** Result returned from the Figma comparison command */
@@ -61,10 +143,15 @@ export const compareWithFigma: BrowserCommand<
     selectorOrBase64.startsWith('iVBOR') || selectorOrBase64.length > 1000;
 
   let screenshotBuffer: Buffer;
+  let targetWidth = 0;
+  let targetHeight = 0;
 
   if (isBase64) {
     // Legacy path: decode the base64 screenshot passed from the test
     screenshotBuffer = Buffer.from(selectorOrBase64, 'base64');
+    const screenshot = PNG.sync.read(screenshotBuffer);
+    targetWidth = screenshot.width;
+    targetHeight = screenshot.height;
   } else {
     // New path: take a screenshot directly using Playwright via the context
     // This avoids the Vitest locator scaling issues
@@ -98,8 +185,8 @@ export const compareWithFigma: BrowserCommand<
       });
 
       // Target dimensions from DOM (CSS pixels) - this is what Figma baselines use
-      const targetWidth = Math.round(domRect.width);
-      const targetHeight = Math.round(domRect.height);
+      targetWidth = Math.round(domRect.width);
+      targetHeight = Math.round(domRect.height);
 
       // Get the element's outer HTML to re-render in a clean page
       const elementHtml = await elementHandle.evaluate((el) => el.outerHTML);
@@ -226,6 +313,7 @@ export const compareWithFigma: BrowserCommand<
     threshold = globalOptions.threshold ?? 0.1,
     maxDiffPercentage = globalOptions.maxDiffPercentage ?? 1.0,
     sizeTolerance = globalOptions.sizeTolerance ?? 2,
+    htmlReferencePath,
   } = options;
 
   // Reference image path: __screenshots__/{spec-name}/{imageName}
@@ -249,26 +337,64 @@ export const compareWithFigma: BrowserCommand<
   // Save the actual screenshot for inspection
   await fs.writeFile(actualPath, screenshotBuffer);
 
-  // Check if a baseline exists - never create it, just fail
-  try {
-    await fs.access(baselinePath);
-  } catch (err) {
-    const message = `MISSING REFERENCE IMAGE: ${baselinePath}`;
-    console.error(`[compareWithFigma] ${message}`);
-    console.error(`[compareWithFigma] Error details:`, err);
-    console.error(
-      `[compareWithFigma] testPath: ${testPath}, testDir: ${testDir}, specName: ${specName}`,
+  let baselineData: Buffer;
+
+  if (htmlReferencePath) {
+    const absoluteHtmlPath = path.isAbsolute(htmlReferencePath)
+      ? htmlReferencePath
+      : path.join(process.cwd(), htmlReferencePath);
+
+    try {
+      await fs.access(absoluteHtmlPath);
+    } catch {
+      return {
+        matches: false,
+        diffPercentage: 100,
+        sizeMismatch: false,
+        message: `MISSING HTML REFERENCE: ${absoluteHtmlPath}`,
+      };
+    }
+
+    const htmlCapture = await captureHtmlReferenceClip(
+      context,
+      absoluteHtmlPath,
+      targetWidth,
+      targetHeight,
     );
-    return {
-      matches: false,
-      diffPercentage: 100,
-      sizeMismatch: false,
-      message,
-    };
+
+    if (!htmlCapture.ok) {
+      return {
+        matches: false,
+        diffPercentage: 100,
+        sizeMismatch: false,
+        message: htmlCapture.message,
+      };
+    }
+
+    baselineData = htmlCapture.buffer;
+  } else {
+    // Check if a baseline exists - never create it, just fail
+    try {
+      await fs.access(baselinePath);
+    } catch (err) {
+      const message = `MISSING REFERENCE IMAGE: ${baselinePath}`;
+      console.error(`[compareWithFigma] ${message}`);
+      console.error(`[compareWithFigma] Error details:`, err);
+      console.error(
+        `[compareWithFigma] testPath: ${testPath}, testDir: ${testDir}, specName: ${specName}`,
+      );
+      return {
+        matches: false,
+        diffPercentage: 100,
+        sizeMismatch: false,
+        message,
+      };
+    }
+
+    baselineData = Buffer.from(await fs.readFile(baselinePath));
   }
 
-  // Read the baseline image and copy to attachments
-  const baselineData = await fs.readFile(baselinePath);
+  // Copy resolved baseline (file or html capture) to attachments for report
   await fs.writeFile(referencePath, baselineData);
 
   const baseline = PNG.sync.read(baselineData);

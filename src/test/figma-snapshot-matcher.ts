@@ -19,6 +19,8 @@ declare module 'vitest/browser' {
 export interface ToMatchFigmaSnapshotOptions extends CompareWithFigmaOptions {
   /** Override the image name (defaults to test name + '.png') */
   imageName?: string;
+  /** Optional HTML file path used as runtime baseline instead of __screenshots__ */
+  htmlReferencePath?: string;
 }
 
 /**

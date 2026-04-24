@@ -2,8 +2,8 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 import viteTsconfigPaths from 'vite-tsconfig-paths';
 import { playwright } from '@vitest/browser-playwright';
-import { compareWithFigma } from './src/test/vitest.commands';
-import VrtReporter from './src/test/generate-vrt-report';
+import { compareWithFigma } from '../src/test/vitest.commands';
+import VrtReporter from '../src/test/generate-vrt-report';
 
 export default defineConfig({
   plugins: [react(), viteTsconfigPaths()],
