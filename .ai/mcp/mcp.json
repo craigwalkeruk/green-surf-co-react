@@ -8,13 +8,8 @@
         "http://127.0.0.1:6006/mcp"
       ]
     },
-    "Figma Remote": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote@latest",
-        "https://mcp.figma.com/mcp/1WBHNz1sDWFrFnl4zmvAIh"
-      ]
+    "figma-desktop": {
+        "url": "http://127.0.0.1:3845/mcp"
     }
   }
 }
