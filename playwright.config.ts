@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 3000;
+/** Must match `VITE_APP_MOCK_API_PORT` / `APP_MOCK_API_PORT` default in e2e env. */
+const MOCK_API_PORT = 8080;
 
 /**
  * Read environment variables from file.
@@ -46,11 +48,18 @@ export default defineConfig({
     },
   ],
 
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: `yarn dev --port ${PORT}`,
-    timeout: 10 * 1000,
-    port: PORT,
-    reuseExistingServer: !process.env.CI,
-  },
+  /* Mock API (MSW middleware) and Vite dev server — same stack as manual e2e. */
+  webServer: [
+    {
+      command: 'npm run run-mock-server',
+      port: MOCK_API_PORT,
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: `npm run dev -- --port ${PORT}`,
+      timeout: 10 * 1000,
+      port: PORT,
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
 });

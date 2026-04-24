@@ -1,4 +1,5 @@
-import { Github, Play } from 'lucide-react';
+import { GitHubLogoIcon } from '@radix-ui/react-icons';
+import { Play } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import logo from '@/assets/logo.svg';
@@ -41,7 +42,7 @@ const LandingRoute = () => {
                 target="_blank"
                 rel="noreferrer"
               >
-                <Button variant="outline" icon={<Github className="size-6" />}>
+                <Button variant="outline" icon={<GitHubLogoIcon className="size-6" />}>
                   Github Repo
                 </Button>
               </a>
