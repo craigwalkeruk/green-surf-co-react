@@ -1,4 +1,4 @@
-import type { Preview } from '@storybook/react';
+import type { Preview } from '@storybook/react-vite';
 import React from 'react';
 import { BrowserRouter as Router } from 'react-router';
 import '../src/index.css';
