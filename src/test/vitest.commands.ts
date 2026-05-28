@@ -41,12 +41,13 @@ async function captureHtmlReferenceClip(
     };
   }
 
-  const newContext = await browser.newContext({
-    deviceScaleFactor: 1,
-    viewport: { width: Math.max(1, clipWidth), height: Math.max(1, clipHeight) },
-  });
-
+  let newContext: any | undefined;
   try {
+    newContext = await browser.newContext({
+      deviceScaleFactor: 1,
+      viewport: { width: Math.max(1, clipWidth), height: Math.max(1, clipHeight) },
+    });
+
     const page = await newContext.newPage();
     await page.goto(pathToFileURL(absoluteHtmlPath).href, {
       waitUntil: 'networkidle',
@@ -85,13 +86,31 @@ async function captureHtmlReferenceClip(
 
     await page.close();
     return { ok: true, buffer: Buffer.from(buffer) };
-  } catch (err) {
+  } catch (err: any) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // Detect common Playwright browser launch failures and provide actionable guidance
+    if (msg.includes("Executable doesn't exist") || msg.includes('Failed to launch') || msg.includes('ENOTFOUND')) {
+      return {
+        ok: false,
+        message:
+          `Failed to launch Playwright browser: ${msg}.\n` +
+          `Ensure Playwright browsers are installed (run 'npx playwright install' or 'npx playwright install chromium').\n` +
+          `If using a custom browser cache path, set PLAYWRIGHT_BROWSERS_PATH or check ${process.env.PLAYWRIGHT_BROWSERS_PATH ?? '<default cache>'}.`,
+      };
+    }
+
     return {
       ok: false,
       message: `Failed to capture HTML reference "${absoluteHtmlPath}": ${err}`,
     };
   } finally {
-    await newContext.close();
+    if (newContext) {
+      try {
+        await newContext.close();
+      } catch {
+        // ignore cleanup errors
+      }
+    }
   }
 }
 
