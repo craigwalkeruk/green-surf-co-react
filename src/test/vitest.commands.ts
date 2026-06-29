@@ -7,11 +7,25 @@ import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 import type { BrowserCommand, BrowserCommandContext } from 'vitest/node';
 
+import { normalizeSvgReference } from './svg-reference-normalizer';
+
 /** Options for configuring the Figma comparison behavior */
 export interface CompareWithFigmaOptions {
   threshold?: number;
   maxDiffPercentage?: number;
   sizeTolerance?: number; // Allow small size differences (default: 2px)
+  /**
+   * Replace <img> nodes with solid boxes before capture so image shifts do not
+   * dominate the diff.
+   */
+  imageNormalization?: 'preserve' | 'placeholder';
+  /** Fill color used when `imageNormalization` is set to `placeholder`. */
+  imagePlaceholderColor?: string;
+  /**
+   * Baseline SVG exported from Figma. Large raster nodes inside the SVG are
+   * normalized to placeholders before rendering.
+   */
+  svgReferencePath?: string;
   /**
    * When set, the baseline is a live Playwright capture of this HTML file
    * (viewport and clip match the captured component PNG size), instead of
@@ -20,11 +34,40 @@ export interface CompareWithFigmaOptions {
   htmlReferencePath?: string;
 }
 
+async function normalizeImagesToPlaceholders(
+  page: any,
+  placeholderColor: string,
+): Promise<void> {
+  await page.evaluate((color: string) => {
+    const images = document.querySelectorAll('img');
+    images.forEach((img) => {
+      const rect = img.getBoundingClientRect();
+      const computed = getComputedStyle(img);
+      const placeholder = document.createElement('div');
+
+      placeholder.setAttribute('data-vrt-image-placeholder', 'true');
+      placeholder.style.width = `${rect.width}px`;
+      placeholder.style.height = `${rect.height}px`;
+      placeholder.style.display = computed.display === 'inline' ? 'inline-block' : computed.display;
+      placeholder.style.verticalAlign = computed.verticalAlign;
+      placeholder.style.background = color;
+      placeholder.style.borderRadius = computed.borderRadius;
+      placeholder.style.boxSizing = computed.boxSizing;
+      placeholder.style.margin = computed.margin;
+      placeholder.style.position = computed.position === 'static' ? 'relative' : computed.position;
+      placeholder.style.overflow = computed.overflow;
+
+      img.replaceWith(placeholder);
+    });
+  }, placeholderColor);
+}
+
 async function captureHtmlReferenceClip(
   context: BrowserCommandContext,
   absoluteHtmlPath: string,
   clipWidth: number,
   clipHeight: number,
+  options?: { imageNormalization?: 'preserve' | 'placeholder'; imagePlaceholderColor?: string },
 ): Promise<{ ok: true; buffer: Buffer } | { ok: false; message: string }> {
   if (context.provider.name !== 'playwright') {
     return {
@@ -33,7 +76,7 @@ async function captureHtmlReferenceClip(
     };
   }
 
-  const browser = context.context.browser();
+  const browser = (context as any).context.browser();
   if (!browser) {
     return {
       ok: false,
@@ -74,6 +117,13 @@ async function captureHtmlReferenceClip(
       );
     });
 
+    if (options?.imageNormalization === 'placeholder') {
+      await normalizeImagesToPlaceholders(
+        page,
+        options.imagePlaceholderColor ?? '#e5e7eb',
+      );
+    }
+
     const buffer = await page.screenshot({
       type: 'png',
       clip: {
@@ -102,6 +152,121 @@ async function captureHtmlReferenceClip(
     return {
       ok: false,
       message: `Failed to capture HTML reference "${absoluteHtmlPath}": ${err}`,
+    };
+  } finally {
+    if (newContext) {
+      try {
+        await newContext.close();
+      } catch {
+        // ignore cleanup errors
+      }
+    }
+  }
+}
+
+async function captureSvgReferenceClip(
+  context: BrowserCommandContext,
+  absoluteSvgPath: string,
+  options: { imagePlaceholderColor?: string; minArea?: number },
+): Promise<{ ok: true; buffer: Buffer } | { ok: false; message: string }> {
+  if (context.provider.name !== 'playwright') {
+    return {
+      ok: false,
+      message: `SVG reference capture only supported with Playwright provider (got: ${context.provider.name})`,
+    };
+  }
+
+  const browser = (context as any).context.browser();
+  if (!browser) {
+    return {
+      ok: false,
+      message: 'Could not access browser instance from context',
+    };
+  }
+
+  const source = await fs.readFile(absoluteSvgPath, 'utf8');
+  const { source: normalizedSvg } = normalizeSvgReference(source, {
+    minArea: options.minArea ?? 250_000,
+    fill: options.imagePlaceholderColor ?? '#e5e7eb',
+  });
+
+  let newContext: any | undefined;
+  try {
+    newContext = await browser.newContext({
+      deviceScaleFactor: 1,
+    });
+
+    const page = await newContext.newPage();
+    await page.setContent(
+      `<!DOCTYPE html><html><head><style>
+        html, body { margin: 0; padding: 0; }
+        svg { display: block; }
+      </style></head><body>${normalizedSvg}</body></html>`,
+      { waitUntil: 'networkidle' },
+    );
+    await page.evaluate(() => document.fonts.ready);
+
+    const svg = page.locator('svg').first();
+    const dims = await svg.evaluate((el) => {
+      const widthAttr = el.getAttribute('width');
+      const heightAttr = el.getAttribute('height');
+      const viewBox = el.getAttribute('viewBox');
+      const fallbackBox = el.getBoundingClientRect();
+
+      let width = Number(widthAttr);
+      let height = Number(heightAttr);
+
+      if (!Number.isFinite(width) || width <= 0 || !Number.isFinite(height) || height <= 0) {
+        if (viewBox) {
+          const [, , vbWidth, vbHeight] = viewBox
+            .trim()
+            .split(/\s+/)
+            .map(Number);
+          if (Number.isFinite(vbWidth) && Number.isFinite(vbHeight)) {
+            width = vbWidth;
+            height = vbHeight;
+          }
+        }
+      }
+
+      if (!Number.isFinite(width) || width <= 0) {
+        width = fallbackBox.width;
+      }
+      if (!Number.isFinite(height) || height <= 0) {
+        height = fallbackBox.height;
+      }
+
+      return { width, height };
+    });
+
+    if (!dims.width || !dims.height) {
+      return {
+        ok: false,
+        message: `Could not determine SVG bounds for "${absoluteSvgPath}"`,
+      };
+    }
+
+    await page.setViewportSize({
+      width: Math.max(1, Math.ceil(dims.width)),
+      height: Math.max(1, Math.ceil(dims.height)),
+    });
+
+    const buffer = await page.screenshot({
+      type: 'png',
+      clip: {
+        x: 0,
+        y: 0,
+        width: Math.max(1, Math.ceil(dims.width)),
+        height: Math.max(1, Math.ceil(dims.height)),
+      },
+    });
+
+    await page.close();
+    return { ok: true, buffer: Buffer.from(buffer) };
+  } catch (err: any) {
+    return {
+      ok: false,
+      message: `Failed to capture SVG reference "${absoluteSvgPath}": ${err}`,
     };
   } finally {
     if (newContext) {
@@ -187,8 +352,8 @@ export const compareWithFigma: BrowserCommand<
       // Use Playwright's native screenshot API to bypass Vitest's iframe scaling issues
       // (See: https://github.com/vitest-dev/vitest/issues/9363)
       // context.iframe is a FrameLocator, context.frame() returns the actual Frame
-      const frameLocator = context.iframe;
-      const frame = await context.frame();
+      const frameLocator = (context as any).iframe;
+      const frame = await (context as any).frame();
 
       // Get the element's actual dimensions from the DOM (unscaled CSS pixels)
       const elementHandle = await frameLocator
@@ -198,7 +363,7 @@ export const compareWithFigma: BrowserCommand<
         throw new Error(`Element not found: ${selectorOrBase64}`);
       }
 
-      const domRect = await elementHandle.evaluate((el) => {
+      const domRect = await elementHandle.evaluate((el: HTMLElement) => {
         const rect = el.getBoundingClientRect();
         return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
       });
@@ -208,7 +373,9 @@ export const compareWithFigma: BrowserCommand<
       targetHeight = Math.round(domRect.height);
 
       // Get the element's outer HTML to re-render in a clean page
-      const elementHtml = await elementHandle.evaluate((el) => el.outerHTML);
+      const elementHtml = await elementHandle.evaluate(
+        (el: HTMLElement) => el.outerHTML,
+      );
 
       // Get all stylesheets from the iframe to include in the new page
       // frame.evaluate() works on the actual Frame object
@@ -229,7 +396,7 @@ export const compareWithFigma: BrowserCommand<
       // Create a new browser context with deviceScaleFactor: 1 for accurate screenshots
       // This bypasses Vitest's iframe scaling issues on retina displays
       // context.context is the BrowserContext, from which we can get the browser
-      const browser = context.context.browser();
+      const browser = (context as any).context.browser();
       if (!browser) {
         throw new Error('Could not access browser instance from context');
       }
@@ -290,6 +457,13 @@ export const compareWithFigma: BrowserCommand<
           );
         });
 
+        if (options.imageNormalization === 'placeholder') {
+          await normalizeImagesToPlaceholders(
+            newPage,
+            options.imagePlaceholderColor ?? '#e5e7eb',
+          );
+        }
+
         // Take a screenshot of the element at 1:1 scale
         const element = newPage.locator('#root > *');
         screenshotBuffer = await element.screenshot();
@@ -332,6 +506,9 @@ export const compareWithFigma: BrowserCommand<
     threshold = globalOptions.threshold ?? 0.1,
     maxDiffPercentage = globalOptions.maxDiffPercentage ?? 1.0,
     sizeTolerance = globalOptions.sizeTolerance ?? 2,
+    imageNormalization = globalOptions.imageNormalization ?? 'preserve',
+    imagePlaceholderColor = globalOptions.imagePlaceholderColor ?? '#e5e7eb',
+    svgReferencePath,
     htmlReferencePath,
   } = options;
 
@@ -358,7 +535,37 @@ export const compareWithFigma: BrowserCommand<
 
   let baselineData: Buffer;
 
-  if (htmlReferencePath) {
+  if (svgReferencePath) {
+    const absoluteSvgPath = path.isAbsolute(svgReferencePath)
+      ? svgReferencePath
+      : path.join(process.cwd(), svgReferencePath);
+
+    try {
+      await fs.access(absoluteSvgPath);
+    } catch {
+      return {
+        matches: false,
+        diffPercentage: 100,
+        sizeMismatch: false,
+        message: `MISSING SVG REFERENCE: ${absoluteSvgPath}`,
+      };
+    }
+
+    const svgCapture = await captureSvgReferenceClip(context, absoluteSvgPath, {
+      imagePlaceholderColor,
+    });
+
+    if (!svgCapture.ok) {
+      return {
+        matches: false,
+        diffPercentage: 100,
+        sizeMismatch: false,
+        message: svgCapture.message,
+      };
+    }
+
+    baselineData = svgCapture.buffer;
+  } else if (htmlReferencePath) {
     const absoluteHtmlPath = path.isAbsolute(htmlReferencePath)
       ? htmlReferencePath
       : path.join(process.cwd(), htmlReferencePath);
@@ -379,6 +586,7 @@ export const compareWithFigma: BrowserCommand<
       absoluteHtmlPath,
       targetWidth,
       targetHeight,
+      { imageNormalization, imagePlaceholderColor },
     );
 
     if (!htmlCapture.ok) {

@@ -96,6 +96,9 @@ browser: {
     threshold: 0.1,           // Pixelmatch sensitivity (0-1)
     maxDiffPercentage: 5.0,   // Max % of different pixels
     sizeTolerance: 2,         // Allow ±2px size differences
+    imageNormalization: 'placeholder',
+    imagePlaceholderColor: '#e5e7eb',
+    svgReferencePath: 'path/to/figma-export.svg',
   }
 }
 ```
@@ -104,9 +107,15 @@ Per-test override:
 ```typescript
 await browser.compareWithFigma('.my-component', {
   maxDiffPercentage: 1.0,
+  imageNormalization: 'placeholder',
+  svgReferencePath: 'src/components/ui/world-peas/__screenshots__/world-peas-homepage.vrt.spec.tsx/world-peas-homepage.svg',
   imageName: 'custom-name.png'
 });
 ```
+
+If your baseline includes images that should not affect the comparison, set `imageNormalization: 'placeholder'`. The capture step will replace `<img>` elements with solid boxes while preserving their layout size.
+
+If you have a Figma-exported SVG baseline, set `svgReferencePath`. The VRT harness will normalize large embedded `<image>` nodes in-memory, render the SVG, capture it, and compare it against the actual HTML screenshot in the same run.
 
 ### 5. Interactive HTML Report
 

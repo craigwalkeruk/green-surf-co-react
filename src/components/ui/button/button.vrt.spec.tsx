@@ -9,7 +9,7 @@ await document.fonts.ready;
 // This test uses a screenshot exported from Figma as a golden source of truth
 it('Button-default', async () => {
   render(
-    <div data-testid="screenshot-container">
+    <div data-testid="screenshot-container" style={{ display: 'inline-block' }}>
       <Button variant="default">Button</Button>
     </div>,
   );
