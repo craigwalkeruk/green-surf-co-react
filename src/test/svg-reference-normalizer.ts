@@ -3,6 +3,8 @@ export type SvgNormalizationOptions = {
   fill?: string;
 };
 
+export const VRT_PLACEHOLDER_COLOR = '#9ca3af';
+
 function getAttr(tag: string, name: string): string | null {
   const match = tag.match(
     new RegExp(String.raw`(?:^|\s)${name}="([^"]*)"`, 'i'),
@@ -32,7 +34,7 @@ export function normalizeSvgReference(
   source: string,
   options: SvgNormalizationOptions = {},
 ): { source: string; replaced: number } {
-  const { minArea = 250_000, fill = '#e5e7eb' } = options;
+  const { minArea = 250_000, fill = VRT_PLACEHOLDER_COLOR } = options;
   const imageTagRe = /<image\b[\s\S]*?\/>/gi;
   let replaced = 0;
 

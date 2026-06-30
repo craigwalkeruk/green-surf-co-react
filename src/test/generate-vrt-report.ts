@@ -28,8 +28,10 @@ interface ComparisonResult {
   errorMessage: string | null;
   diffPercentage: number | null;
   maxDiffPercentage: number | null;
-  imageWidth: number | null;
-  imageHeight: number | null;
+  baselineWidth: number | null;
+  baselineHeight: number | null;
+  screenshotWidth: number | null;
+  screenshotHeight: number | null;
 }
 
 async function findComparisonImages(): Promise<ComparisonResult[]> {
@@ -72,8 +74,10 @@ async function findComparisonImages(): Promise<ComparisonResult[]> {
         let errorMessage: string | null = null;
         let diffPercentage: number | null = null;
         let maxDiffPercentage: number | null = null;
-        let imageWidth: number | null = null;
-        let imageHeight: number | null = null;
+        let baselineWidth: number | null = null;
+        let baselineHeight: number | null = null;
+        let screenshotWidth: number | null = null;
+        let screenshotHeight: number | null = null;
         let passed: boolean | null = null;
 
         if (hasMetadata) {
@@ -85,13 +89,10 @@ async function findComparisonImages(): Promise<ComparisonResult[]> {
             diffPercentage = metadata.diffPercentage ?? null;
             maxDiffPercentage = metadata.maxDiffPercentage ?? null;
             passed = metadata.matches ?? null;
-            // Use the larger dimension from baseline or screenshot
-            const baselineW = metadata.baselineSize?.width ?? 0;
-            const baselineH = metadata.baselineSize?.height ?? 0;
-            const screenshotW = metadata.screenshotSize?.width ?? 0;
-            const screenshotH = metadata.screenshotSize?.height ?? 0;
-            imageWidth = Math.max(baselineW, screenshotW);
-            imageHeight = Math.max(baselineH, screenshotH);
+            baselineWidth = metadata.baselineSize?.width ?? null;
+            baselineHeight = metadata.baselineSize?.height ?? null;
+            screenshotWidth = metadata.screenshotSize?.width ?? null;
+            screenshotHeight = metadata.screenshotSize?.height ?? null;
           } catch {
             // Ignore metadata read errors
           }
@@ -111,8 +112,10 @@ async function findComparisonImages(): Promise<ComparisonResult[]> {
             errorMessage,
             diffPercentage,
             maxDiffPercentage,
-            imageWidth,
-            imageHeight,
+            baselineWidth,
+            baselineHeight,
+            screenshotWidth,
+            screenshotHeight,
           });
         }
       }
@@ -285,6 +288,14 @@ async function generateHtml(results: ComparisonResult[]): Promise<string> {
 
     .diff-stats .threshold {
       color: var(--text-secondary);
+    }
+
+    .size-stats {
+      display: block;
+      margin-top: 0.15rem;
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      font-family: monospace;
     }
 
     .test-status {
@@ -552,6 +563,9 @@ async function generateHtml(results: ComparisonResult[]): Promise<string> {
       const diffStatsHtml = comparison.diffPercentage !== null
         ? \`<span class="diff-stats"><span class="actual">\${comparison.diffPercentage.toFixed(2)}%</span> / <span class="threshold">\${comparison.maxDiffPercentage !== null ? comparison.maxDiffPercentage.toFixed(2) : '?'}%</span></span>\`
         : '';
+      const sizeStatsHtml = comparison.baselineWidth !== null && comparison.baselineHeight !== null && comparison.screenshotWidth !== null && comparison.screenshotHeight !== null
+        ? \`<span class="size-stats">baseline \${comparison.baselineWidth}x\${comparison.baselineHeight} · actual \${comparison.screenshotWidth}x\${comparison.screenshotHeight}</span>\`
+        : '';
 
       card.innerHTML = \`
         <div class="test-header" onclick="toggleCard(\${index})">
@@ -562,6 +576,7 @@ async function generateHtml(results: ComparisonResult[]): Promise<string> {
             <div class="test-name">\${comparison.testName}</div>
             <div class="spec-file">\${comparison.specFile}</div>
             \${diffStatsHtml}
+            \${sizeStatsHtml}
           </div>
           <div style="display: flex; align-items: center; gap: 1rem; margin-left: auto;">
             <svg class="expand-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
@@ -608,12 +623,12 @@ async function generateHtml(results: ComparisonResult[]): Promise<string> {
                   <button class="zoom-btn" onclick="zoomSlider(\${index}, 10)">+</button>
                   <button class="zoom-btn" onclick="zoomSlider(\${index}, 0)" style="margin-left: 0.5rem;">Reset</button>
                 </div>
-                <div class="slider-container" id="slider-container-\${index}" \${comparison.imageWidth ? \`style="width: \${comparison.imageWidth + 40}px; max-width: 100%;" data-base-width="\${comparison.imageWidth + 40}"\` : ''}>
+                <div class="slider-container" id="slider-container-\${index}" \${comparison.baselineWidth || comparison.screenshotWidth ? \`style="width: \${Math.max(comparison.baselineWidth || 0, comparison.screenshotWidth || 0) + 40}px; max-width: 100%;" data-base-width="\${Math.max(comparison.baselineWidth || 0, comparison.screenshotWidth || 0) + 40}"\` : ''}>
                   <div class="slider-images-wrapper">
                     <div class="slider-images" id="slider-\${index}">
                       <img src="\${comparison.actualBase64}" alt="Actual" class="base-image">
                       <div class="overlay" style="width: calc(50% + 20px);">
-                        <img src="\${comparison.referenceBase64}" alt="Reference" style="width: \${comparison.imageWidth || 'auto'}px;">
+                        <img src="\${comparison.referenceBase64}" alt="Reference" style="width: \${Math.max(comparison.baselineWidth || 0, comparison.screenshotWidth || 0) || 'auto'}px;">
                       </div>
                     </div>
                   </div>

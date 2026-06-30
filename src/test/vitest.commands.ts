@@ -7,7 +7,10 @@ import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 import type { BrowserCommand, BrowserCommandContext } from 'vitest/node';
 
-import { normalizeSvgReference } from './svg-reference-normalizer';
+import {
+  normalizeSvgReference,
+  VRT_PLACEHOLDER_COLOR,
+} from './svg-reference-normalizer';
 
 /** Options for configuring the Figma comparison behavior */
 export interface CompareWithFigmaOptions {
@@ -50,7 +53,7 @@ async function normalizeImagesToPlaceholders(
       placeholder.style.height = `${rect.height}px`;
       placeholder.style.display = computed.display === 'inline' ? 'inline-block' : computed.display;
       placeholder.style.verticalAlign = computed.verticalAlign;
-      placeholder.style.background = color;
+      placeholder.style.backgroundColor = color;
       placeholder.style.borderRadius = computed.borderRadius;
       placeholder.style.boxSizing = computed.boxSizing;
       placeholder.style.margin = computed.margin;
@@ -120,7 +123,7 @@ async function captureHtmlReferenceClip(
     if (options?.imageNormalization === 'placeholder') {
       await normalizeImagesToPlaceholders(
         page,
-        options.imagePlaceholderColor ?? '#e5e7eb',
+        options.imagePlaceholderColor ?? VRT_PLACEHOLDER_COLOR,
       );
     }
 
@@ -187,7 +190,7 @@ async function captureSvgReferenceClip(
   const source = await fs.readFile(absoluteSvgPath, 'utf8');
   const { source: normalizedSvg } = normalizeSvgReference(source, {
     minArea: options.minArea ?? 250_000,
-    fill: options.imagePlaceholderColor ?? '#e5e7eb',
+      fill: options.imagePlaceholderColor ?? VRT_PLACEHOLDER_COLOR,
   });
 
   let newContext: any | undefined;
@@ -289,6 +292,10 @@ export interface CompareWithFigmaResult {
   sizeMismatch: boolean;
   /** Human-readable message describing the result */
   message: string;
+  /** Captured baseline dimensions in pixels */
+  baselineSize?: { width: number; height: number };
+  /** Captured screenshot dimensions in pixels */
+  screenshotSize?: { width: number; height: number };
 }
 
 /**
@@ -460,7 +467,7 @@ export const compareWithFigma: BrowserCommand<
         if (options.imageNormalization === 'placeholder') {
           await normalizeImagesToPlaceholders(
             newPage,
-            options.imagePlaceholderColor ?? '#e5e7eb',
+            options.imagePlaceholderColor ?? VRT_PLACEHOLDER_COLOR,
           );
         }
 
@@ -507,7 +514,7 @@ export const compareWithFigma: BrowserCommand<
     maxDiffPercentage = globalOptions.maxDiffPercentage ?? 1.0,
     sizeTolerance = globalOptions.sizeTolerance ?? 2,
     imageNormalization = globalOptions.imageNormalization ?? 'preserve',
-    imagePlaceholderColor = globalOptions.imagePlaceholderColor ?? '#e5e7eb',
+    imagePlaceholderColor = globalOptions.imagePlaceholderColor ?? VRT_PLACEHOLDER_COLOR,
     svgReferencePath,
     htmlReferencePath,
   } = options;
@@ -759,7 +766,7 @@ export const compareWithFigma: BrowserCommand<
   console.log(`[compareWithFigma] Diff saved to: ${diffPath}`);
 
   const message = sizeMismatch
-    ? `Size mismatch and ${diffPercentage.toFixed(2)}% pixel difference. See diff: ${diffPath}`
+    ? `Size mismatch: baseline=${baseline.width}x${baseline.height}, screenshot=${screenshot.width}x${screenshot.height}, diff=${diffPercentage.toFixed(2)}%. See diff: ${diffPath}`
     : matches
       ? `Image matches reference (diff: ${diffPercentage.toFixed(2)}%). See diff: ${diffPath}`
       : `Image differs by ${diffPercentage.toFixed(2)}% (threshold: ${maxDiffPercentage}%). See diff: ${diffPath}`;
@@ -769,5 +776,7 @@ export const compareWithFigma: BrowserCommand<
     diffPercentage,
     sizeMismatch,
     message,
+    baselineSize: { width: baseline.width, height: baseline.height },
+    screenshotSize: { width: screenshot.width, height: screenshot.height },
   } as CompareWithFigmaResult;
 };

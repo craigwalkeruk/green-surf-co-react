@@ -97,7 +97,7 @@ browser: {
     maxDiffPercentage: 5.0,   // Max % of different pixels
     sizeTolerance: 2,         // Allow ±2px size differences
     imageNormalization: 'placeholder',
-    imagePlaceholderColor: '#e5e7eb',
+    imagePlaceholderColor: '#9ca3af',
     svgReferencePath: 'path/to/figma-export.svg',
   }
 }

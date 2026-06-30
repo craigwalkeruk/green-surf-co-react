@@ -35,7 +35,7 @@ const Header = () => (
 );
 
 const Hero = () => (
-  <section className="flex flex-col items-center px-6 pt-16 text-center md:px-24 md:pt-28 lg:pt-[167px]">
+  <section className="flex flex-col items-center px-6 pt-16 text-center md:px-24 md:pt-28 lg:pt-[152px]">
     <h2 className="mx-auto max-w-4xl font-serif text-4xl leading-[1.2] tracking-tight md:text-5xl lg:text-[64px] lg:tracking-[-1.28px]">
       We're <span className="italic">farmers</span>,{' '}
       <span className="italic">purveyors</span>, and{' '}
@@ -50,7 +50,7 @@ const Hero = () => (
 );
 
 const ImageGrid = () => (
-  <section className="flex flex-col gap-6 px-6 pt-16 md:grid md:grid-cols-12 md:items-start md:gap-x-4 md:px-24 md:pt-24 lg:pt-[180px]">
+  <section className="flex flex-col gap-6 px-6 pt-16 md:grid md:grid-cols-12 md:items-start md:gap-x-4 md:px-24 md:pt-24 lg:pt-[168px]">
     <div className="h-72 overflow-hidden md:col-span-5 md:h-[693px]">
       <Image
         src={leavesImg}
@@ -81,7 +81,7 @@ const ImageGrid = () => (
 );
 
 const Beliefs = () => (
-  <section className="flex flex-col gap-6 px-6 pb-16 pt-16 md:grid md:grid-cols-12 md:gap-x-4 md:px-24 md:pb-24 md:pt-28 lg:pb-[160px] lg:pt-[210px]">
+  <section className="flex flex-col gap-6 px-6 pb-16 pt-16 md:grid md:grid-cols-12 md:gap-x-4 md:px-24 md:pb-24 md:pt-28 lg:pb-[85px] lg:pt-[190px]">
     <div className="md:col-span-2">
       <h3 className="text-sm font-semibold uppercase leading-[1.6] tracking-[0.56px] md:pt-[5px]">
         What we believe
